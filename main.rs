@@ -29,5 +29,5 @@ fn main() {
         category: EquipmentCategory::Desk(desk),
     };
 
-    println!("Equipment created.");
+    println!("Location: {}", equipment.location);
 }
