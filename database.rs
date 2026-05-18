@@ -137,3 +137,152 @@ pub fn delete_equipment(
     Ok(())
 }
 
+pub fn update_location(
+    conn: &Connection,
+    id: i32,
+    new_location: &crate::location::Location,
+) -> Result<()> {
+
+    conn.execute(
+        "
+        UPDATE equipment
+
+        SET
+            building = ?1,
+            floor = ?2,
+            room = ?3
+
+        WHERE id = ?4
+        ",
+        (
+            &new_location.building,
+            new_location.floor,
+            new_location.room,
+            id,
+        ),
+    )?;
+
+    Ok(())
+}
+
+pub fn filter_by_building(
+    conn: &Connection,
+    building_name: &str,
+) -> Result<()> {
+
+    let mut stmt = conn.prepare(
+        "
+        SELECT
+            id,
+            value,
+            building,
+            floor,
+            room,
+            category
+
+        FROM equipment
+
+        WHERE building = ?1
+        "
+    )?;
+
+    let equipment_iter = stmt.query_map(
+        [building_name],
+        |row| {
+
+            Ok((
+                row.get::<_, i32>(0)?,
+                row.get::<_, i32>(1)?,
+                row.get::<_, String>(2)?,
+                row.get::<_, u8>(3)?,
+                row.get::<_, u16>(4)?,
+                row.get::<_, String>(5)?,
+            ))
+        },
+    )?;
+
+    for item in equipment_iter {
+
+        let (
+            id,
+            value,
+            building,
+            floor,
+            room,
+            category
+        ) = item?;
+
+        println!(
+            "ID: {} | Value: {} | Location: {}-{}{} | Category: {}",
+            id,
+            value,
+            building,
+            floor,
+            room,
+            category
+        );
+    }
+
+    Ok(())
+}
+
+pub fn sorted_equipment(
+    conn: &Connection,
+) -> Result<()> {
+
+    let mut stmt = conn.prepare(
+        "
+        SELECT
+            id,
+            value,
+            building,
+            floor,
+            room,
+            category
+
+        FROM equipment
+
+        ORDER BY
+            building,
+            floor,
+            room
+        "
+    )?;
+
+    let equipment_iter = stmt.query_map([], |row| {
+
+        Ok((
+            row.get::<_, i32>(0)?,
+            row.get::<_, i32>(1)?,
+            row.get::<_, String>(2)?,
+            row.get::<_, u8>(3)?,
+            row.get::<_, u16>(4)?,
+            row.get::<_, String>(5)?,
+        ))
+    })?;
+
+    for item in equipment_iter {
+
+        let (
+            id,
+            value,
+            building,
+            floor,
+            room,
+            category
+        ) = item?;
+
+        println!(
+            "ID: {} | Value: {} | Location: {}-{}{} | Category: {}",
+            id,
+            value,
+            building,
+            floor,
+            room,
+            category
+        );
+    }
+
+    Ok(())
+}
+
